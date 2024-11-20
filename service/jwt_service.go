@@ -1,27 +1,32 @@
 package service
 
-import "todo/utils"
+import (
+	"time"
+	"todo/utils"
+)
 
-func CreateAccessToken(email string, userId int64) (string, error) {
-	token, err := utils.GenerateAccessToken(email, userId)
+func CreateAccessToken(email string, userId int64) (string, time.Time, error) {
+	accessToken, accessExp, err := utils.GenerateAccessToken(email, userId)
 	if err != nil {
-		return "", err
+		return "", time.Time{}, err
 	}
-	return token, nil
+	return accessToken, accessExp, nil
 }
 
-func CreateRefreshToken(email string, userId int64) (string, error) {
-	token, err := utils.GenerateRefreshToken(email, userId)
+func CreateRefreshToken(email string, userId int64) (string, time.Time, error) {
+	refreshToken, refreshExp, err := utils.GenerateRefreshToken(email, userId)
 	if err != nil {
-		return "", err
+		return "", time.Time{}, err
 	}
-	return token, nil
+	return refreshToken, refreshExp, nil
 }
 
-func ValidateJwtToken(accessToken string) (int64, error) {
-	token, err := utils.VerifyToken(accessToken, []byte("your-access-secret-key"))
+func VerifyToken(token string) (int64, error) {
+	userId, err := utils.VerifyToken(token)
+
 	if err != nil {
 		return 0, err
 	}
-	return token, nil
+
+	return userId, nil
 }

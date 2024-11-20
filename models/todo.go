@@ -22,7 +22,6 @@ func GetAllTodos() (*[]Todo, error) {
 }
 
 func AddTodos(t Todo) error {
-
 	_, err := database.DB.Exec(`INSERT INTO todo(title, description, completed) VALUES ($1, $2, $3)`, t.Title, t.Description, t.Completed)
 
 	if err != nil {

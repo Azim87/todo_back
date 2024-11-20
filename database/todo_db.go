@@ -64,4 +64,22 @@ func createTable() {
 	if err != nil {
 		panic("Could not create user table")
 	}
+
+	createUserTokenTable := `CREATE TABLE IF NOT EXISTS user_tokens (
+    id SERIAL PRIMARY KEY NOT NULL,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    access_token TEXT NOT NULL,
+    refresh_token TEXT NOT NULL,
+    access_token_expiry TIMESTAMP NOT NULL,
+    refresh_token_expiry TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_user_id UNIQUE (user_id)
+)`
+
+	_, err = DB.Exec(createUserTokenTable)
+
+	if err != nil {
+		panic("Could not create user token table")
+	}
 }

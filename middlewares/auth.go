@@ -1,24 +1,44 @@
 package middlewares
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+	"strings"
 	"todo/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(context *gin.Context) {
+
 		token := context.GetHeader("Authorization")
-		if token == "" {
-			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Authorization token is required"})
+
+		if !strings.HasPrefix(token, "Bearer ") {
+			context.AbortWithStatusJSON(
+				http.StatusUnauthorized,
+				gin.H{"error": "Authorization header must have Bearer token"})
 			return
 		}
 
-		_, err := service.ValidateJwtToken(token)
-		if err != nil {
-			context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
+		authToken := strings.TrimPrefix(token, "Bearer ")
+
+		if authToken == "" {
+			context.AbortWithStatusJSON(
+				http.StatusUnauthorized,
+				gin.H{"error": "Authorization token is required"})
 			return
 		}
+
+		userId, err := service.VerifyToken(authToken)
+
+		if err != nil {
+			context.AbortWithStatusJSON(
+				http.StatusUnauthorized,
+				gin.H{"error": "Invalid authorization token!"})
+			return
+		}
+
+		context.Set("userId", userId)
 		context.Next()
 	}
 }

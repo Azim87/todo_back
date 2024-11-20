@@ -1,10 +1,11 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"todo/controller"
 	"todo/middlewares"
+
+	"github.com/gin-gonic/gin"
 )
 
 func RegisterRoutes(server *gin.Engine) {
@@ -21,4 +22,5 @@ func RegisterRoutes(server *gin.Engine) {
 	todoRoutes.POST("/addTodo", controller.AddTodo)
 	server.POST("/login", controller.Login)
 	server.POST("/signup", controller.Signup)
+	server.POST("/refresh", controller.RefreshTokens)
 }

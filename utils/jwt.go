@@ -1,64 +1,71 @@
 package utils
 
 import (
-	"errors"
-	"github.com/golang-jwt/jwt/v5"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 const accessSecret = "your-access-secret-key"
 const refreshSecret = "your-refresh-secret-key"
 
-func GenerateAccessToken(email string, userId int64) (string, error) {
-	// Set token expiration time (e.g., 15 minutes)
-	expirationTime := time.Now().Add(15 * time.Minute)
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email":  email,
-		"userId": userId,
-		"ext":    expirationTime,
-	})
+func GenerateAccessToken(email string, userId int64) (string, time.Time, error) {
+	expirationAccessTime := time.Now().Add(time.Minute * 360)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
+		jwt.MapClaims{
+			"email":  email,
+			"userId": userId,
+			"exp":    expirationAccessTime.Unix(),
+		})
+	signedAccessToken, err := token.SignedString([]byte(accessSecret))
 
-	return token.SignedString([]byte(accessSecret))
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	return signedAccessToken, expirationAccessTime, nil
 }
 
-func GenerateRefreshToken(email string, userId int64) (string, error) {
-	// Set refresh token expiration time (e.g., 7 days)
-	expirationTime := time.Now().Add(7 * 24 * time.Hour)
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email":  email,
-		"userId": userId,
-		"ext":    expirationTime,
-	})
+func GenerateRefreshToken(email string, userId int64) (string, time.Time, error) {
+	expirationRefreshTime := time.Now().Add(time.Hour * 24 * 7)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
+		jwt.MapClaims{
+			"email":  email,
+			"userId": userId,
+			"exp":    expirationRefreshTime.Unix(),
+		})
 
-	return token.SignedString([]byte(refreshSecret))
+	signedRefreshToken, err := token.SignedString([]byte(refreshSecret))
+
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	return signedRefreshToken, expirationRefreshTime, nil
 }
 
-func VerifyToken(token string, secretKey []byte) (int64, error) {
+func VerifyToken(token string) (int64, error) {
 	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
-		_, ok := token.Method.(*jwt.SigningMethodHMAC)
-		if !ok {
-			return nil, errors.New("unexpected signing method")
-		}
-
-		return secretKey, nil
+		return []byte(accessSecret), nil
 	})
 
 	if err != nil {
 		return 0, err
 	}
 
-	tokenIsValid := parsedToken.Valid
+	validToken := !parsedToken.Valid
 
-	if !tokenIsValid {
-		return 0, errors.New(`token is invalid`)
+	if !validToken {
+		return 0, err
 	}
 
 	claims, ok := parsedToken.Claims.(jwt.MapClaims)
 
 	if !ok {
-		return 0, errors.New("invalid token claims")
-
+		return 0, err
 	}
+
 	userId := int64(claims["userId"].(float64))
+
 	return userId, nil
 }

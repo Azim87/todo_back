@@ -1,15 +1,20 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
+	"fmt"
 	"net/http"
 	"strconv"
 	"todo/models"
+
+	"github.com/gin-gonic/gin"
 )
 
 func GetTodos(context *gin.Context) {
+
 	todos, err := models.GetAllTodos()
+
 	if err != nil {
+		fmt.Println("err", err)
 		context.JSON(http.StatusInternalServerError, gin.H{"message": err})
 		return
 	}
