@@ -12,7 +12,7 @@ var DB *sqlx.DB
 
 const (
 	host     = "localhost"
-	port     = 5544
+	port     = 5432
 	user     = "postgres"
 	password = "123456"
 	dbname   = "tododb"
@@ -49,7 +49,7 @@ func createTable() {
 	_, err := DB.Exec(createTodoTable)
 
 	if err != nil {
-		panic("Could not create todo table")
+		panic(err)
 	}
 
 	createUserTable := `
